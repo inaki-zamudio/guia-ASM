@@ -99,11 +99,70 @@ alternate_sum_4_using_c_alternative:
 ; uint32_t alternate_sum_8(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7, uint32_t x8);
 ; registros y pila: x1[?], x2[?], x3[?], x4[?], x5[?], x6[?], x7[?], x8[?]
 alternate_sum_8:
-	;prologo
+	;x1 --> EDI
+  ;x2 --> ESI
+  ;x3 --> EDX
+  ;x4 --> ECX
+  ;x5 --> R8D
+  ;x6 --> R9D
+  ;x7 --> 
+  ;x8 -->
 
-	; COMPLETAR
+	;prologo
+  push RBP ;pila alineada
+  mov RBP, RSP
+
+  push R9
+  push R8
+  push RCX
+  push RDX
+
+  call restar_c ; EAX <- x1 - x2
+
+  mov EDI, EAX
+  pop RDX
+  mov ESI, EDX
+
+  ; No tengo alineado el stack, primero hago:
+  sub RSP, 8
+
+  call sumar_c ; EAX <- x1 - x2 + x3
+  add RSP, 8
+
+  mov EDI, EAX
+  pop RCX
+  mov ESI, ECX
+
+  call restar_c ; EAX <- x1 - x2 + x3 - x4
+
+  mov EDI, EAX
+  pop R8
+  mov ESI, R8D
+
+  ; no tengo alineado el stack, primero hago:
+  sub RSP, 8
+
+  call sumar_c ; EAX <- x1 - x2 + x3 - x4 + x5
+  add RSP, 8
+
+  mov EDI, EAX
+  pop R9
+  mov ESI, R9D
+
+  call restar_c ; EAX <- x1 - x2 + x3 - x4 + x5 - x6
+
+  mov EDI, EAX
+  mov ESI, [RBP + 16] ; Los parámetros se pasan fuera del stack frame, ver Manejo de Pila para más detalles
+
+  call sumar_c ; EAX <- x1 - x2 + x3 - x4 + x5 - x6 + x7
+
+  mov EDI, EAX
+  mov ESI, [RBP + 24]
+
+  call restar_c ; EAX <- x1 - x2 + x3 - x4 + x5 - x6 + x7 - x8
 
 	;epilogo
+  pop RBP
 	ret
 
 
@@ -111,6 +170,19 @@ alternate_sum_8:
 ;void product_2_f(uint32_t * destination, uint32_t x1, float f1);
 ;registros: destination[?], x1[?], f1[?]
 product_2_f:
+  ; destination -> RDI
+  ; x1 -> ESI
+  ; f1 -> XMM0
+
+  cvtsi2sd XMM1, RSI
+  cvtss2sd XMM0, XMM0
+
+  mulsd XMM0, XMM1
+
+  cvttsd2si EAX, XMM0
+
+  mov dword [RDI], EAX   
+
 	ret
 
 
@@ -118,23 +190,70 @@ product_2_f:
 ;, uint32_t x1, float f1, uint32_t x2, float f2, uint32_t x3, float f3, uint32_t x4, float f4
 ;, uint32_t x5, float f5, uint32_t x6, float f6, uint32_t x7, float f7, uint32_t x8, float f8
 ;, uint32_t x9, float f9);
-;registros y pila: destination[rdi], x1[?], f1[?], x2[?], f2[?], x3[?], f3[?], x4[?], f4[?]
-;	, x5[?], f5[?], x6[?], f6[?], x7[?], f7[?], x8[?], f8[?],
-;	, x9[?], f9[?]
+;registros y pila: destination[rdi], x1[esi], f1[xmm0], x2[edx], f2[xmm1], x3[ecx], f3[xmm2], x4[r8], f4[xmm3]
+;	, x5[r9], f5[xmm4], x6[RBP + 16], f6[xmm5], x7[RBP + 24], f7[xmm6], x8[RBP + 32], f8[xmm7],
+;	, x9[RBP + 40], f9[RBP + 48]
 product_9_f:
 	;prologo
 	push rbp
 	mov rbp, rsp
 
 	;convertimos los flotantes de cada registro xmm en doubles
-	; COMPLETAR
+	cvtss2sd XMM0, XMM0
+  cvtss2sd XMM1, XMM1
+  cvtss2sd XMM2, XMM2
+  cvtss2sd XMM3, XMM3
+  cvtss2sd XMM4, XMM4
+  cvtss2sd XMM5, XMM5
+  cvtss2sd XMM6, XMM6
+  cvtss2sd XMM7, XMM7
+
+  movss XMM8, [RBP + 48]
+  cvtss2sd XMM8, XMM8
 
 	;multiplicamos los doubles en xmm0 <- xmm0 * xmm1, xmmo * xmm2 , ...
-	; COMPLETAR
+	mulsd XMM0, XMM1
+  mulsd XMM0, XMM2
+  mulsd XMM0, XMM3
+  mulsd XMM0, XMM4
+  mulsd XMM0, XMM5
+  mulsd XMM0, XMM6
+  mulsd XMM0, XMM7
+  mulsd XMM0, XMM8
 
 	; convertimos los enteros en doubles y los multiplicamos por xmm0.
-	; COMPLETAR
+	cvtsi2sd XMM1, RSI
+  mulsd XMM0, XMM1
 
+  cvtsi2sd XMM2, RDX
+  mulsd XMM0, XMM2
+
+  cvtsi2sd XMM3, RCX
+  mulsd XMM0, XMM3
+
+  cvtsi2sd XMM4, R8
+  mulsd XMM0, XMM4
+
+  cvtsi2sd XMM5, R9
+  mulsd XMM0, XMM5
+
+  mov RSI, [RBP + 16]
+  cvtsi2sd XMM6, RSI
+  mulsd XMM0, XMM6
+
+  mov RDX, [RBP + 24]
+  cvtsi2sd XMM7, RDX
+  mulsd XMM0, XMM7
+
+  mov R8, [RBP + 32]
+  cvtsi2sd XMM8, R8
+  mulsd XMM0, XMM8
+
+  mov R9, [RBP + 40]
+  cvtsi2sd XMM9, R9
+  mulsd XMM0, XMM9
+
+  movsd [RDI], XMM0 ; destination <- resultado
 	; epilogo
 	pop rbp
 	ret
