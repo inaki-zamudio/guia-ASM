@@ -8,6 +8,6 @@
 #include "Memoria.h"
 
 int main() {
-	/* Acá pueden realizar sus propias pruebas */
+	
 	return 0;
 }

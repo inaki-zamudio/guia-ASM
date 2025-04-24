@@ -31,12 +31,12 @@ global cantidad_total_de_elementos_packed
 ;extern uint32_t cantidad_total_de_elementos(lista_t* lista);
 ;registros: lista[rdi]
 cantidad_total_de_elementos:
-    mov rax, 0           ; Inicializa contador en 0
+    mov eax, 0           ; Inicializa contador en 0
 .loop:
     cmp dword [rdi], 0           ; ¿actual == NULL?
     je .end
     mov rdi, [rdi]       ; actual = actual->next
-    add rax, [rdi+NODO_OFFSET_LONGITUD]              ; cont++
+    add eax, [rdi+NODO_OFFSET_LONGITUD]              ; cont+=long nodo
     jmp .loop
 .end:
     ret
@@ -44,5 +44,22 @@ cantidad_total_de_elementos:
 ;extern uint32_t cantidad_total_de_elementos_packed(packed_lista_t* lista);
 ;registros: lista[?]
 cantidad_total_de_elementos_packed:
+    mov eax, 0           
+.loop:
+    cmp dword [rdi], 0   
+    je .end
+    mov rdi, [rdi]                                                  
+                                                                         
+;    ┌────────────┐           ┌─────────────┐           ┌─────────────┐    
+;    │            │           │             │           │             │    
+;    │            │           │             │           │             │    
+;    │  lista_t*  ┼──────────►│   node_t*   ┼──────────►│    data     │    
+;    │            │           │             │           │             │    
+;    │            │           │             │           │             │    
+;    └────────────┘           └─────────────┘           └─────────────┘    
+                                          
+    add eax, [rdi+PACKED_NODO_OFFSET_LONGITUD] ; acá en vez de usar eax también podemos poner dword antes del [rdi+...] y usando el registro rax.
+    jmp .loop
+.end:
 	ret
 

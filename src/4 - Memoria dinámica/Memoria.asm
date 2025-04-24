@@ -15,7 +15,33 @@ global strLen
 ; ** String **
 
 ; int32_t strCmp(char* a, char* b)
+; a -> rdi 
+; b -> rsi
+
 strCmp:
+	.loop:
+	; *a == *b == 0 -> .eq
+	mov al, [rdi]
+	mov bl, [rsi]
+	cmp al, bl
+	jg .greater
+	jl .smaller
+	cmp al, 0
+	je .eq
+	jmp .loop
+	
+	.smaller:
+	mov rax, -1
+	jmp .fin
+
+	.greater:
+	mov rax, 1
+	jmp .fin
+
+	.eq:
+	xor rax, rax
+	
+	.fin:
 	ret
 
 ; char* strClone(char* a)
